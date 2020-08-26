@@ -363,18 +363,18 @@ p = [args["output"], "training_history_{}_{}.pickle".format(spreproc,
 f = open(os.path.sep.join(p), 'rb')
 history = pickle.load(f)
 f.close()
-
+#%%
 s_epochs = 0
-f_epochs = epochs
-np_range = np.array(np.arange(s_epochs, f_epochs))
+f_epochs = 25
+np_range = np.arange(s_epochs, f_epochs)
 import matplotlib.pyplot as plt
 # plot the training loss and accuracy
 plt.style.use("ggplot")
 plt.figure()
-plt.plot(np_range, history["loss"][np_range], label="train_loss")
-plt.plot(np_range, history["val_loss"][np_range], label="val_loss")
-plt.plot(np_range, history["accuracy"][np_range], label="train_acc")
-plt.plot(np_range, history["val_accuracy"][np_range], label="val_acc")
+plt.plot(list(np_range), history["loss"][s_epochs: f_epochs], label="train_loss")
+plt.plot(list(np_range), history["val_loss"][s_epochs: f_epochs], label="val_loss")
+plt.plot(list(np_range), history["accuracy"][s_epochs: f_epochs], label="train_acc")
+plt.plot(list(np_range), history["val_accuracy"][s_epochs: f_epochs], label="val_acc")
 # plt.plot(history["loss"], label="train_loss")
 # plt.plot(history["val_loss"], label="val_loss")
 # plt.plot(history["accuracy"], label="train_acc")
