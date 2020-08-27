@@ -1,16 +1,16 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt; 
- 
+import matplotlib.pyplot as plt;
+
 # Importing sklearn libraries
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, accuracy_score
- 
+
 # Importing hypopt library for grid search
 from hypopt import GridSearch
- 
+
 # Importing Keras libraries
 from keras.utils import np_utils
 from keras.models import Sequential
@@ -21,7 +21,7 @@ from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.layers import Dense, Conv2D, MaxPooling2D
 from keras.layers import Dropout, Flatten, GlobalAveragePooling2D
- 
+
 import warnings
 warnings.filterwarnings('ignore')
 
