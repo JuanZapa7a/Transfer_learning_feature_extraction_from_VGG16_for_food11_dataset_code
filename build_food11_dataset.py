@@ -20,10 +20,10 @@ import argparse
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--dataset", default="../dataset/Food-11",
+ap.add_argument("-b", "--basedataset", default="../../PB/datasets/Food-11",
+								help="path to original dataset")
+ap.add_argument("-d", "--dataset", default="../../PB/datasets/Food11",
 								help="path to input dataset")
-ap.add_argument("-b", "--basedataset", default="../dataset/Food11",
-								help="path to new build dataset")
 # ap.add_argument("-m", "--model", default="model",
 # 								help="path to output model")
 args = vars(ap.parse_args())
@@ -32,7 +32,7 @@ args = vars(ap.parse_args())
 for split in ("training","evaluation", "validation"):
 	# grab all image paths in the current split
 	print("[INFO] processing '{} split'...".format(split))
-	p = os.path.sep.join([args["dataset"], split])
+	p = os.path.sep.join([args["basedataset"], split])
 	imagePaths = list(paths.list_images(p))
 	# I prefer to have my dataset on disk organized in the format of:
 	# dataset_name/class_label/example_of_class_label.jpg
@@ -48,8 +48,8 @@ for split in ("training","evaluation", "validation"):
 		label = classes[int(filename.split("_")[0])]
 
 		# construct the path to the output directory
-		#dirPath = os.path.sep.join([args["basedataset"], split, label])
-		dirPath = os.path.sep.join([args["basedataset"], label])
+		#dirPath = os.path.sep.join([args["dataset"], split, label])
+		dirPath = os.path.sep.join([args["dataset"], label])
 		# if the output directory does not exist, create it
 		if not os.path.exists(dirPath):
 			print("[INFO] Creating directory for new dataset {}".format(label))

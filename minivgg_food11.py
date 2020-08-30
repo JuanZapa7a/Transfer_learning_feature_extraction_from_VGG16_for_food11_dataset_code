@@ -1,31 +1,16 @@
 # USAGE
-# 1. python build_food11_dataset.py
-# build a new database well organized using food5k_config
-# dataset_name/class_label/example_of_class_label.jpg
+# python minivggnet_food11.py
 
-# 2. python fine_tuning_food11_VGG16.py
-# change the head of VGG16 with the new organized dataset
-
-# 3. python train_model_logisitic_regression_datasetcsv_trans_learn.py
-# load the features in csv format, evaluate the model. serialize the model and
-# close the database
-from tensorflow.keras.applications import ResNet50
-from tensorflow.keras.applications import InceptionV3
-from tensorflow.keras.applications import Xception # TensorFlow ONLY
-from tensorflow.keras.applications import VGG16
-from tensorflow.keras.applications import VGG19
 import argparse
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--dataset", default = "../../PB/datasets/Food11",
-                help = "path to input dataset")
-ap.add_argument("-o", "--output", default = "../output",
-                help = "path to output .png loss/acc plot")
-ap.add_argument("-m", "--model", default = "../model",
-                help = "path to model .hdf5")
-ap.add_argument("-n", "--network", type=str, default="vgg16",
-                help="name of pre-trained network to use")
+ap.add_argument("-d", "--dataset", default="../../PB/datasets/Food11",
+                help="path to input dataset")
+ap.add_argument("-o", "--output", default="../output",
+                help="path to output .png loss/acc plot")
+ap.add_argument("-m", "--model", default="../model",
+                help="path to output model")
 ap.add_argument("-e", "--epochs", type=int, default=5,
                 help="epochs to train")
 ap.add_argument("-b", "--batch", type=int, default=32,
@@ -40,23 +25,6 @@ ap.add_argument("-nv", "--nesterov", type=bool, default=False,
                 help="Nesterov")
 args = vars(ap.parse_args())
 
-# define a dictionary that maps model names to their classes
-# inside Keras
-NETWORKS = {
-  "vgg16": VGG16,
-  "vgg19": VGG19,
-  "inception": InceptionV3,
-  "xception": Xception,  # TensorFlow ONLY
-  "resnet": ResNet50
-}
-
-# ensure a valid model name was supplied via command line argument
-if args["network"] not in NETWORKS.keys():
-  raise AssertionError("The --network command line argument should "
-                       "be a key in the `NETWORKS` dictionary(vgg16,vgg19,"
-                       "inception,xception,resnet)")
-
-
 from imutils import paths
 import os
 import numpy as np
@@ -65,7 +33,7 @@ import numpy as np
 # the class label names from the image paths
 print("[INFO] loading images...")
 imagePaths = list(paths.list_images(args["dataset"]))
-classNames = [p.split(os.path.sep)[-2] for p in imagePaths]
+classNames = [pt.split(os.path.sep)[-2] for pt in imagePaths]
 classNames = [str(x) for x in np.unique(classNames)]
 print("[INFO] Names of classes {}...".format(classNames))
 
@@ -79,30 +47,22 @@ from pyimagesearch.preprocessing import AddChannelPreprocessor
 # initialize the image preprocessors
 aap = AspectAwarePreprocessor(224, 224)
 iap = ImageToArrayPreprocessor()
-pp = PatchPreprocessor(224, 224)
-sp = SimplePreprocessor(224, 224)
-cp = CropPreprocessor(224, 224)
-acp = AddChannelPreprocessor(10, 20)
-
-if args["model"] in ("inception", "xception"):
- aap = AspectAwarePreprocessor(299, 299)
- iap = ImageToArrayPreprocessor()
- pp = PatchPreprocessor(299, 299)
- sp = SimplePreprocessor(299, 299)
- cp = CropPreprocessor(299, 299)
- acp = AddChannelPreprocessor(10, 20)
+pp = PatchPreprocessor(224,224)
+sp = SimplePreprocessor(224,224)
+cp = CropPreprocessor(224,224)
+acp = AddChannelPreprocessor(10,20)
 
 from pyimagesearch.datasets import SimpleDatasetLoader
 
 # load the image (data) and extract the class label assuming
 # that our path has the following format:
 # /path/to/dataset/{class}/{image}.jpg
-# print("[INFO] loading {}".format(imagePath))
-# load the dataset from disk then scale the raw pixel intensities to the
-# range [0, 1]
+# print("[INFO] loading {}".format(imagePaths))
+# load the dataset from disk then scale the raw pixel intensities
+# to the range [0, 1]
 spreproc = "sp_aap_iap"
-sdl = SimpleDatasetLoader(preprocessors = [sp,aap,iap])
-(data, labels) = sdl.load(imagePaths, verbose = 500)
+sdl = SimpleDatasetLoader(preprocessors=[sp, aap, iap])
+(data, labels) = sdl.load(imagePaths, verbose=500)
 data = data.astype("float") / 255.0
 
 # data = []
@@ -134,23 +94,13 @@ data = data.astype("float") / 255.0
 #data = np.array(data) / 255.0
 #labels = np.array(labels)
 
+
 from sklearn.model_selection import train_test_split
-# # partition the data into training and testing splits using 60% of
-# # the data for training and the remaining 20% for testing and 20% validation
-# (trainX, testX, trainYa, testYa) = train_test_split(data, labels,
-#                                                     test_size=0.2,
-#                                                     random_state=42)
-#
-# (trainX, valX, trainYa, valYa) = train_test_split(trainX, trainYa,
-#                                                     test_size=0.25,
-#                                                     random_state=42)
-
-
 # partition the data into training and testing splits using 75% of
-# the data for training and the remaining 20% for testing and 20% validation
+# the data for training and the remaining 25% for testing
 (trainX, testX, trainYa, testYa) = train_test_split(data, labels,
-                                                    test_size = 0.25,
-                                                    random_state = 42)
+                                                    test_size=0.25,
+                                                    random_state=42)
 
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import LabelEncoder
@@ -174,65 +124,16 @@ from tensorflow.keras.utils import to_categorical # [1 1 2 2 3 4] = [[0 0 0
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # construct the image generator for data augmentation
-aug = ImageDataGenerator(rotation_range = 15, width_shift_range = 0.1,
-                         height_shift_range = 0.1, shear_range = 0.2,
-                         zoom_range = 0.2,
-                         horizontal_flip = True, fill_mode = "nearest")
+aug = ImageDataGenerator(rotation_range=15, width_shift_range=0.1,
+                         height_shift_range=0.1, shear_range=0.2, zoom_range=0.2,
+                         horizontal_flip=True, fill_mode="nearest")
 
-from tensorflow.keras.layers import AveragePooling2D
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Input
-from tensorflow.keras.models import Model
-
-# load the MODELS[args["model"]] network, ensuring the head FC layer sets are left
-# off
-baseModel = NETWORKS[args["network"]](weights="imagenet", include_top=False,
-                  input_tensor=Input(shape=(224, 224, 3)))
-if args["network"] in ("inception", "xception"):
-  baseModel = NETWORKS[args["network"]](weights="imagenet", include_top=False,
-                                    input_tensor=Input(shape=(299, 299, 3)))
-
-# construct the head of the model that will be placed on top of the
-# the base model
-# headModel = baseModel.output
-# headModel = AveragePooling2D(pool_size=(4, 4))(headModel)
-# headModel = Flatten(name="flatten")(headModel)
-# headModel = Dense(64, activation="relu")(headModel)
-# headModel = Dropout(0.5)(headModel)
-# headModel = Dense(len(classNames), activation="softmax")(headModel)
-
-# headModel = baseModel.output
-# headModel = Flatten(name="flatten")(headModel)
-# headModel = Dense(512, activation="relu")(headModel)
-# headModel = Dropout(0.5)(headModel)
-# headModel = Dense(128, activation="relu")(headModel)
-# headModel = Dropout(0.5)(headModel)
-# headModel = Dense(len(classNames), activation="softmax")(headModel)
-
-from pyimagesearch.nn.conv import FCHeadNet, FCHeadNet2
-
-# initialize the new head of the network, a set of FC layers
-# followed by a softmax classifier
-headModel = FCHeadNet2.build(baseModel, len(classNames), 128)
-
-# place the head FC model on top of the base model (this will become
-# the actual model we will train)
-model = Model(inputs = baseModel.input, outputs = headModel)
-model.summary()
-
-# loop over all layers in the base model and freeze them so they
-# will *not* be updated during the training process
-for layer in baseModel.layers:
-  layer.trainable = False
-
-# compile our model (this needs to be done after our setting our
-# layers to being non-trainable
+from pyimagesearch.nn.conv import MiniVGGNet
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.optimizers import Adam
 # initialize the optimizer and model
+print("[INFO] compiling model...")
 epochs = args["epochs"]
 batch_size = args["batch"]
 lr = args["lr"] # 0.05
@@ -262,26 +163,24 @@ if OPTIMIZERS[args["optimizer"]] == Adam:
   opt = Adam(lr=lr, decay = lr/epochs)
 
 
-model.compile(loss = "categorical_crossentropy", optimizer = opt,
-              metrics = ["accuracy"])
+model = MiniVGGNet.build(width=224, height=224, depth=3,
+                         classes=len(classNames))
+
+model.compile(loss="categorical_crossentropy", optimizer=opt,
+              metrics=["accuracy"])
+
 
 ##### ARCHITECTURE #####
 print("[INFO] saving architecture model to file...")
-p = [args["output"], "{}_fine_tuning_arch_{}_lr:{}_epochs:{}_batch:{}_{"
+p = [args["output"], "minivgg-food11_arch_{}_lr:{}_epochs:{}_batch:{}_{"
                      "}.png".format(
-  args["network"],
   args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
   os.getpid())]
 from tensorflow.keras.utils import plot_model
-plot_model(model, to_file = os.path.sep.join(p), show_shapes = True, dpi = 600)
-
-# train the head of the network for a few epochs (all other
-# layers are frozen) -- this will allow the new FC layers to
-# start to become initialized with actual "learned" values
-# versus pure random
+plot_model(model, to_file=os.path.sep.join(p), show_shapes=True, dpi = 600)
 
 # Set callback functions to early stop training and save the best model so far.
 
@@ -306,8 +205,7 @@ plot_model(model, to_file = os.path.sep.join(p), show_shapes = True, dpi = 600)
 from tensorflow.keras.callbacks import ModelCheckpoint
 print("[INFO] writting best model to hdf5 file...")
 # p = [args["model"], "model_{epoch:02d}_{val_loss:.2f}.hdf5"]
-p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
-  args["network"],
+p = [args["model"], "miniVGG_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
   args["optimizer"],
   args["lr"],
   args["epochs"],
@@ -318,19 +216,16 @@ checkpoint = ModelCheckpoint(os.path.sep.join(p), monitor = "val_loss",
                              verbose = 1)
 callbacks = [checkpoint]
 
-# train the head
-print("[INFO] training head...")
-H = model.fit(
-  aug.flow(trainX, trainY, batch_size = batch_size),
-  steps_per_epoch = len(trainX) // batch_size,
-  validation_data = (testX, testY),
-  validation_steps = len(testX) // batch_size,
-  epochs = epochs, callbacks = checkpoint)
+# train the network
+print("[INFO] training network...")
+H = model.fit(aug.flow(trainX, trainY, batch_size=batch_size),
+              validation_data=(testX, testY),
+              steps_per_epoch=len(trainX) // batch_size,
+              epochs=epochs, callbacks = checkpoint)
 
 print("[INFO] saving training history to file...")
 import pickle
-p = [args["output"], "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
-  args["network"],
+p = [args["output"], "miniVGG_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
   args["optimizer"],
   args["lr"],
   args["epochs"],
@@ -341,12 +236,10 @@ f = open(os.path.sep.join(p), 'wb')
 pickle.dump(H.history, f, pickle.HIGHEST_PROTOCOL)
 f.close()
 
-# %%
 print("[INFO] loading the best model...")
 from tensorflow.keras.models import load_model
 # load the best model
-p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
-  args["network"],
+p = [args["model"], "miniVGG_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
   args["optimizer"],
   args["lr"],
   args["epochs"],
@@ -354,11 +247,10 @@ p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
   os.getpid())]
 model = load_model(os.path.sep.join(p))
 
-# %%
 ##### EVALUATING #####
 
 print("[INFO] evaluating after initialization (making predictions)...")
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report,confusion_matrix
 
 # 1. Evaluate the network after initialization
 # make predictions on the testing set
@@ -366,9 +258,7 @@ predictions = model.predict(testX, batch_size = batch_size)
 
 print("[INFO] Saving Predictions to file...")
 import pickle
-p = [args["output"], "{}_predictions_{}_lr:{}_epochs:{}_batch:{}_{"
-                     "}.pickle".format(
-  args["network"],
+p = [args["output"], "miniVGG_predictions_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
   args["optimizer"],
   args["lr"],
   args["epochs"],
@@ -382,7 +272,6 @@ f.close()
 # 2. Classification report
 # for each image in the testing set we need to find the index of the
 # label with corresponding largest predicted probability
-
 #
 # Loading training history file
 print("[INFO] Loading Predictions from file...")
@@ -399,20 +288,22 @@ f.close()
 
 report = classification_report(testY.argmax(axis = 1),
                                predictions.argmax(axis = 1),
-                               target_names = classNames)
+                               target_names=classNames)
 # display Classification Report
+
 print("Learning Ratio = {}\n".format(args["lr"]))
 print(report)
 print("")
 
 # 3. Confusion Matrix
 confmatrix = confusion_matrix(testY.argmax(axis = 1),
-                              predictions.argmax(axis = 1))
+                              predictions.argmax(axis=1))
 # display Confusion Matrix
 print(confmatrix)
 
 # 4. Saving the classification report and confussion matrix to file
-p = [args["output"], "{}_clasification_report_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(args["optimizer"],
+p = [args["output"], "miniVGG_clasification_report_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -439,8 +330,8 @@ print("rank-3: {:.2f}%".format(rankn * 100))
 print("rank-5: {:.2f}%".format(rank5 * 100))
 
 # 6. Saving the ranking to file
-p = [args["output"], "{}_ranking_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(
-  args["network"], args["optimizer"],
+p = [args["output"], "miniVGG_ranking_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -451,7 +342,6 @@ f.write("rank-1: {:.2f}%".format(rank1 * 100))
 f.write("rank-3: {:.2f}%".format(rankn * 100))
 f.write("rank-5: {:.2f}%".format(rank5 * 100))
 f.close()
-
 
 #%%
 ##### PLOTTING  SECTION ######
@@ -468,8 +358,9 @@ plt.barh(bin, counts, align = 'center', alpha = 0.5)
 plt.yticks(bin, classNames)
 plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution')
-p = [args["output"], "{}_Food11_Data_Class_Distribution_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
+p = [args["output"],
+     "miniVGG_Food11_Data_Class_Distribution_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -489,8 +380,8 @@ plt.yticks(bin, classNames)
 plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution Train Set')
 p = [args["output"],
-     "{}_Food11_Data_Class_Distribution_for_train_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-       args["network"],args["optimizer"],
+     "miniVGG_Food11_Data_Class_Distribution_for_train_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -510,8 +401,8 @@ plt.yticks(bin, classNames)
 plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution Test Set')
 p = [args["output"],
-     "{}_Food11_Data_Class_Distribution_for_test_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-       args["network"],args["optimizer"],
+     "miniVGG_Food11_Data_Class_Distribution_for_test_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -530,9 +421,10 @@ plt.show()
 # plt.yticks(bin, classNames)
 # plt.xlabel('Counts')
 # plt.title('Food11 Data Class Distribution Validation Set')
-# p = [args["output"], "Food11_Data_Class_Distribution_for_val_set_{}_{"
+# p = [args["output"], "miniVGG_Food11_Data_Class_Distribution_for_val_set_{}_{"
 #                      "}.png".format(spreproc,
 #                                     os.getpid())]
+# print("[INFO] Saving Food11 Data Class Distribution for val set plot...")
 # plt.savefig(os.path.sep.join(p))
 # plt.show()
 
@@ -551,8 +443,8 @@ for i in range(0, 4):
     k = k + 1
 # show the plot
 plt.title('Food11 Data Class Samples')
-p = [args["output"], "{}_Food11_Data_Class_Samples_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
+p = [args["output"], "miniVGG_Food11_Data_Class_Samples_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -571,8 +463,8 @@ import matplotlib.pyplot as plt
 print("[INFO] loading training history for plotting...")
 # Loading training history file
 import pickle
-p = [args["output"], "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
-  args["network"],args["optimizer"],
+p = [args["output"], "miniVGG_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -596,8 +488,8 @@ plt.plot(list(np_range), history["val_accuracy"][s_epochs:f_epochs],
 # plt.plot(history["val_loss"], label="val_loss")
 # plt.plot(history["accuracy"], label="train_acc")
 # plt.plot(history["val_accuracy"], label="val_acc")
-plt.title("{}_Training Loss and Accuracy with_{}_lr:{}_epochs:{}_batch:{}_{}".format(
-  args["network"],args["optimizer"],
+plt.title("miniVGG_Training Loss and Accuracy with_{}_lr:{}_epochs:{}_batch:{}_{}".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -605,8 +497,8 @@ plt.title("{}_Training Loss and Accuracy with_{}_lr:{}_epochs:{}_batch:{}_{}".fo
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend()
-p = [args["output"], "{}_fine_tuning_history_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
+p = [args["output"], "miniVGG_fine_tuning_history_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],

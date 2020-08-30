@@ -29,11 +29,11 @@ import argparse
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--dataset", default="../dataset/Food-11",
+ap.add_argument("-d", "--dataset", default="../../PB/datasets/Food-11",
                 help="path to input dataset")
-ap.add_argument("-o", "--output", default="output",
+ap.add_argument("-o", "--output", default="../output",
                 help="path to output .png loss/acc plot")
-ap.add_argument("-m", "--model", default="model",
+ap.add_argument("-m", "--model", default="../model",
                 help="path to output model")
 args = vars(ap.parse_args())
 
