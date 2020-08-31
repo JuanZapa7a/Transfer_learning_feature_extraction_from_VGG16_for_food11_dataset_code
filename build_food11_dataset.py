@@ -11,53 +11,52 @@
 # close the database
 
 # import the necessary packages
-#from config import food5k_config as config
+# from config import food5k_config as config
 from imutils import paths
 import shutil
 import os
 import argparse
 
-
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-b", "--basedataset", default="../../PB/datasets/Food-11",
-								help="path to original dataset")
-ap.add_argument("-d", "--dataset", default="../../PB/datasets/Food11",
-								help="path to input dataset")
+ap.add_argument("-b", "--basedataset", default = "../../PB/datasets/Food-11",
+                help = "path to original dataset")
+ap.add_argument("-d", "--dataset", default = "../../PB/datasets/Food11",
+                help = "path to input dataset")
 # ap.add_argument("-m", "--model", default="model",
 # 								help="path to output model")
 args = vars(ap.parse_args())
 
 # loop over the data splits
-for split in ("training","evaluation", "validation"):
-	# grab all image paths in the current split
-	print("[INFO] processing '{} split'...".format(split))
-	p = os.path.sep.join([args["basedataset"], split])
-	imagePaths = list(paths.list_images(p))
-	# I prefer to have my dataset on disk organized in the format of:
-	# dataset_name/class_label/example_of_class_label.jpg
+for split in ("training", "evaluation", "validation"):
+  # grab all image paths in the current split
+  print("[INFO] processing '{} split'...".format(split))
+  p = os.path.sep.join([args["basedataset"], split])
+  imagePaths = list(paths.list_images(p))
+  # I prefer to have my dataset on disk organized in the format of:
+  # dataset_name/class_label/example_of_class_label.jpg
 
-	classes = ['Bread','Dairy product','Dessert','Egg','Fried food','Meat',
-														 'Noodles-Pasta','Rice','Seafood', 'Soup',
-						 'Vegetable-Fruit']
+  classes = ['Bread', 'Dairy product', 'Dessert', 'Egg', 'Fried food', 'Meat',
+             'Noodles-Pasta', 'Rice', 'Seafood', 'Soup',
+             'Vegetable-Fruit']
 
-	# loop over the image paths
-	for imagePath in imagePaths:
-		# extract class label from the filename
-		filename = imagePath.split(os.path.sep)[-1]
-		label = classes[int(filename.split("_")[0])]
+  # loop over the image paths
+  for imagePath in imagePaths:
+    # extract class label from the filename
+    filename = imagePath.split(os.path.sep)[-1]
+    label = classes[int(filename.split("_")[0])]
 
-		# construct the path to the output directory
-		#dirPath = os.path.sep.join([args["dataset"], split, label])
-		dirPath = os.path.sep.join([args["dataset"], label])
-		# if the output directory does not exist, create it
-		if not os.path.exists(dirPath):
-			print("[INFO] Creating directory for new dataset {}".format(label))
-			os.makedirs(dirPath)
+    # construct the path to the output directory
+    # dirPath = os.path.sep.join([args["dataset"], split, label])
+    dirPath = os.path.sep.join([args["dataset"], label])
+    # if the output directory does not exist, create it
+    if not os.path.exists(dirPath):
+      print("[INFO] Creating directory for new dataset {}".format(label))
+      os.makedirs(dirPath)
 
-		# construct the path to the output image file and copy it
-		p = os.path.sep.join([dirPath, filename])
-		shutil.copy2(imagePath, p)
+    # construct the path to the output image file and copy it
+    p = os.path.sep.join([dirPath, filename])
+    shutil.copy2(imagePath, p)
 
 # $	tree Food11 --filelimit 15
 # Food11

@@ -11,7 +11,7 @@
 # close the database
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.applications import InceptionV3
-from tensorflow.keras.applications import Xception # TensorFlow ONLY
+from tensorflow.keras.applications import Xception  # TensorFlow ONLY
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.applications import VGG19
 import argparse
@@ -24,20 +24,20 @@ ap.add_argument("-o", "--output", default = "../output",
                 help = "path to output .png loss/acc plot")
 ap.add_argument("-m", "--model", default = "../model",
                 help = "path to model .hdf5")
-ap.add_argument("-n", "--network", type=str, default="vgg16",
-                help="name of pre-trained network to use")
-ap.add_argument("-e", "--epochs", type=int, default=5,
-                help="epochs to train")
-ap.add_argument("-b", "--batch", type=int, default=32,
-                help="batch size to train")
-ap.add_argument("-op", "--optimizer", type=str, default="sgd",
-                help="Learning Rate")
-ap.add_argument("-lr", "--lr", type=float, default=1e-2,
-                help="Learning Rate")
-ap.add_argument("-mm", "--momentum", type=float, default=0.9,
-                help="Momentum")
-ap.add_argument("-nv", "--nesterov", type=bool, default=False,
-                help="Nesterov")
+ap.add_argument("-n", "--network", type = str, default = "vgg16",
+                help = "name of pre-trained network to use")
+ap.add_argument("-e", "--epochs", type = int, default = 10,
+                help = "epochs to train")
+ap.add_argument("-b", "--batch", type = int, default = 40,
+                help = "batch size to train")
+ap.add_argument("-op", "--optimizer", type = str, default = "adam",
+                help = "Learning Rate")
+ap.add_argument("-lr", "--lr", type = float, default = 2.6e-2,
+                help = "Learning Rate")
+ap.add_argument("-mm", "--momentum", type = float, default = 0.9,
+                help = "Momentum")
+ap.add_argument("-nv", "--nesterov", type = bool, default = True,
+                help = "Nesterov")
 args = vars(ap.parse_args())
 
 # define a dictionary that maps model names to their classes
@@ -55,7 +55,6 @@ if args["network"] not in NETWORKS.keys():
   raise AssertionError("The --network command line argument should "
                        "be a key in the `NETWORKS` dictionary(vgg16,vgg19,"
                        "inception,xception,resnet)")
-
 
 from imutils import paths
 import os
@@ -85,12 +84,12 @@ cp = CropPreprocessor(224, 224)
 acp = AddChannelPreprocessor(10, 20)
 
 if args["model"] in ("inception", "xception"):
- aap = AspectAwarePreprocessor(299, 299)
- iap = ImageToArrayPreprocessor()
- pp = PatchPreprocessor(299, 299)
- sp = SimplePreprocessor(299, 299)
- cp = CropPreprocessor(299, 299)
- acp = AddChannelPreprocessor(10, 20)
+  aap = AspectAwarePreprocessor(299, 299)
+  iap = ImageToArrayPreprocessor()
+  pp = PatchPreprocessor(299, 299)
+  sp = SimplePreprocessor(299, 299)
+  cp = CropPreprocessor(299, 299)
+  acp = AddChannelPreprocessor(10, 20)
 
 from pyimagesearch.datasets import SimpleDatasetLoader
 
@@ -101,7 +100,7 @@ from pyimagesearch.datasets import SimpleDatasetLoader
 # load the dataset from disk then scale the raw pixel intensities to the
 # range [0, 1]
 spreproc = "sp_aap_iap"
-sdl = SimpleDatasetLoader(preprocessors = [sp,aap,iap])
+sdl = SimpleDatasetLoader(preprocessors = [sp, aap, iap])
 (data, labels) = sdl.load(imagePaths, verbose = 500)
 data = data.astype("float") / 255.0
 
@@ -131,10 +130,11 @@ data = data.astype("float") / 255.0
 
 ## convert the data and labels to NumPy arrays while scaling the pixel
 ## intensities to the range [0, 255]
-#data = np.array(data) / 255.0
-#labels = np.array(labels)
+# data = np.array(data) / 255.0
+# labels = np.array(labels)
 
 from sklearn.model_selection import train_test_split
+
 # # partition the data into training and testing splits using 60% of
 # # the data for training and the remaining 20% for testing and 20% validation
 # (trainX, testX, trainYa, testYa) = train_test_split(data, labels,
@@ -154,14 +154,15 @@ from sklearn.model_selection import train_test_split
 
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import LabelEncoder
+
 # # convert the labels from integers to vectors
 trainY = LabelBinarizer().fit_transform(trainYa)
-trainYa = LabelEncoder().fit_transform(trainYa) # for plotting
+trainYa = LabelEncoder().fit_transform(trainYa)  # for plotting
 testY = LabelBinarizer().fit_transform(testYa)
-testYa = LabelEncoder().fit_transform(testYa) # for plotting
+testYa = LabelEncoder().fit_transform(testYa)  # for plotting
 
-from sklearn.preprocessing import LabelEncoder # [A A B B C D] = [1 1 2 2 3 4]
-from tensorflow.keras.utils import to_categorical # [1 1 2 2 3 4] = [[0 0 0
+from sklearn.preprocessing import LabelEncoder  # [A A B B C D] = [1 1 2 2 3 4]
+from tensorflow.keras.utils import to_categorical  # [1 1 2 2 3 4] = [[0 0 0
 # 1] [0 0 0 1] [0 0 1 0][0 0 1 0][0 1 0 0] [1 0 0 0]]
 
 # convert the labels from integers to vectors
@@ -188,11 +189,14 @@ from tensorflow.keras.models import Model
 
 # load the MODELS[args["model"]] network, ensuring the head FC layer sets are left
 # off
-baseModel = NETWORKS[args["network"]](weights="imagenet", include_top=False,
-                  input_tensor=Input(shape=(224, 224, 3)))
+baseModel = NETWORKS[args["network"]](weights = "imagenet", include_top = False,
+                                      input_tensor = Input(
+                                        shape = (224, 224, 3)))
 if args["network"] in ("inception", "xception"):
-  baseModel = NETWORKS[args["network"]](weights="imagenet", include_top=False,
-                                    input_tensor=Input(shape=(299, 299, 3)))
+  baseModel = NETWORKS[args["network"]](weights = "imagenet",
+                                        include_top = False,
+                                        input_tensor = Input(
+                                          shape = (299, 299, 3)))
 
 # construct the head of the model that will be placed on top of the
 # the base model
@@ -232,10 +236,11 @@ for layer in baseModel.layers:
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.optimizers import Adam
+
 # initialize the optimizer and model
 epochs = args["epochs"]
 batch_size = args["batch"]
-lr = args["lr"] # 0.05
+lr = args["lr"]  # 0.05
 momentum = args["momentum"]
 nesterov = args["nesterov"]
 
@@ -253,14 +258,14 @@ if args["optimizer"] not in OPTIMIZERS.keys():
                        "be a key in the `OPTIMIZERS` dictionary(SGD,RMSprop,"
                        "Adam)")
 if OPTIMIZERS[args["optimizer"]] == SGD:
-  opt = SGD(lr=lr, decay=lr/epochs, momentum=momentum, nesterov=nesterov)
+  opt = SGD(lr = lr, decay = lr / epochs, momentum = momentum,
+            nesterov = nesterov)
 
 if OPTIMIZERS[args["optimizer"]] == RMSprop:
-  opt = RMSprop(lr=lr)
+  opt = RMSprop(lr = lr)
 
 if OPTIMIZERS[args["optimizer"]] == Adam:
-  opt = Adam(lr=lr, decay = lr/epochs)
-
+  opt = Adam(lr = lr, decay = lr / epochs)
 
 model.compile(loss = "categorical_crossentropy", optimizer = opt,
               metrics = ["accuracy"])
@@ -276,6 +281,7 @@ p = [args["output"], "{}_fine_tuning_arch_{}_lr:{}_epochs:{}_batch:{}_{"
   args["batch"],
   os.getpid())]
 from tensorflow.keras.utils import plot_model
+
 plot_model(model, to_file = os.path.sep.join(p), show_shapes = True, dpi = 600)
 
 # train the head of the network for a few epochs (all other
@@ -304,6 +310,7 @@ plot_model(model, to_file = os.path.sep.join(p), show_shapes = True, dpi = 600)
 # 0-indexed).
 
 from tensorflow.keras.callbacks import ModelCheckpoint
+
 print("[INFO] writting best model to hdf5 file...")
 # p = [args["model"], "model_{epoch:02d}_{val_loss:.2f}.hdf5"]
 p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
@@ -329,13 +336,15 @@ H = model.fit(
 
 print("[INFO] saving training history to file...")
 import pickle
-p = [args["output"], "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
-  args["network"],
-  args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+
+p = [args["output"],
+     "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 # save the training history
 f = open(os.path.sep.join(p), 'wb')
 pickle.dump(H.history, f, pickle.HIGHEST_PROTOCOL)
@@ -344,6 +353,7 @@ f.close()
 # %%
 print("[INFO] loading the best model...")
 from tensorflow.keras.models import load_model
+
 # load the best model
 p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
   args["network"],
@@ -358,7 +368,7 @@ model = load_model(os.path.sep.join(p))
 ##### EVALUATING #####
 
 print("[INFO] evaluating after initialization (making predictions)...")
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 # 1. Evaluate the network after initialization
 # make predictions on the testing set
@@ -366,14 +376,15 @@ predictions = model.predict(testX, batch_size = batch_size)
 
 print("[INFO] Saving Predictions to file...")
 import pickle
-p = [args["output"], "{}_predictions_{}_lr:{}_epochs:{}_batch:{}_{"
-                     "}.pickle".format(
-  args["network"],
-  args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+
+p = [args["output"],
+     "{}_predictions_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 # save the predicitons
 f = open(os.path.sep.join(p), 'wb')
 pickle.dump(predictions, f, pickle.HIGHEST_PROTOCOL)
@@ -387,12 +398,15 @@ f.close()
 # Loading training history file
 print("[INFO] Loading Predictions from file...")
 import pickle
-p = [args["output"], "miniVGG_predictions_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
-  args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+
+p = [args["output"],
+     "{}_predictions_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 f = open(os.path.sep.join(p), 'rb')
 predictions = pickle.load(f)
 f.close()
@@ -412,11 +426,14 @@ confmatrix = confusion_matrix(testY.argmax(axis = 1),
 print(confmatrix)
 
 # 4. Saving the classification report and confussion matrix to file
-p = [args["output"], "{}_clasification_report_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+p = [args["output"],
+     "{}_clasification_report_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 
 f = open(os.path.sep.join(p), "w")
 print("[INFO] Saving Classification Report and Confusion Matrix to file...")
@@ -440,7 +457,8 @@ print("rank-5: {:.2f}%".format(rank5 * 100))
 
 # 6. Saving the ranking to file
 p = [args["output"], "{}_ranking_{}_lr:{}_epochs:{}_batch:{}_{}.txt".format(
-  args["network"], args["optimizer"],
+  args["network"],
+  args["optimizer"],
   args["lr"],
   args["epochs"],
   args["batch"],
@@ -452,8 +470,7 @@ f.write("rank-3: {:.2f}%".format(rankn * 100))
 f.write("rank-5: {:.2f}%".format(rank5 * 100))
 f.close()
 
-
-#%%
+# %%
 ##### PLOTTING  SECTION ######
 
 import matplotlib.pyplot as plt
@@ -468,12 +485,14 @@ plt.barh(bin, counts, align = 'center', alpha = 0.5)
 plt.yticks(bin, classNames)
 plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution')
-p = [args["output"], "{}_Food11_Data_Class_Distribution_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+p = [args["output"],
+     "{}_Food11_Data_Class_Distribution_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 print("[INFO] Saving Food11 Data Class Distribution plot...")
 plt.savefig(os.path.sep.join(p))
 plt.show()
@@ -490,11 +509,12 @@ plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution Train Set')
 p = [args["output"],
      "{}_Food11_Data_Class_Distribution_for_train_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-       args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 print("[INFO] Saving Food11 Data Class Distribution for train set plot...")
 plt.savefig(os.path.sep.join(p))
 plt.show()
@@ -511,11 +531,12 @@ plt.xlabel('Counts')
 plt.title('Food11 Data Class Distribution Test Set')
 p = [args["output"],
      "{}_Food11_Data_Class_Distribution_for_test_set_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-       args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 print("[INFO] Saving Food11 Data Class Distribution for test set plot...")
 plt.savefig(os.path.sep.join(p))
 plt.show()
@@ -551,12 +572,14 @@ for i in range(0, 4):
     k = k + 1
 # show the plot
 plt.title('Food11 Data Class Samples')
-p = [args["output"], "{}_Food11_Data_Class_Samples_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+p = [args["output"],
+     "{}_Food11_Data_Class_Samples_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 print("[INFO] Saving Sample Images plot...")
 plt.savefig(os.path.sep.join(p))
 plt.show()
@@ -564,19 +587,22 @@ plt.show()
 # %%
 # 5. PLot and Save the plotting from training history
 s_epochs = 0
-f_epochs = args["epochs"] #default value
+f_epochs = args["epochs"]  # default value
 np_range = np.arange(s_epochs, f_epochs)
 import matplotlib.pyplot as plt
 
 print("[INFO] loading training history for plotting...")
 # Loading training history file
 import pickle
-p = [args["output"], "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
-  args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+
+p = [args["output"],
+     "{}_training_history_{}_lr:{}_epochs:{}_batch:{}_{}.pickle".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 f = open(os.path.sep.join(p), 'rb')
 history = pickle.load(f)
 f.close()
@@ -596,21 +622,29 @@ plt.plot(list(np_range), history["val_accuracy"][s_epochs:f_epochs],
 # plt.plot(history["val_loss"], label="val_loss")
 # plt.plot(history["accuracy"], label="train_acc")
 # plt.plot(history["val_accuracy"], label="val_acc")
-plt.title("{}_Training Loss and Accuracy with_{}_lr:{}_epochs:{}_batch:{}_{}".format(
-  args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid()))
+plt.title(
+  "{}_Training Loss and Accuracy with_{}_lr:{}_epochs:{}_batch:{}_{}".format(
+    args["network"],
+    args["optimizer"],
+    args["lr"],
+    args["epochs"],
+    args["batch"],
+    os.getpid()))
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend()
-p = [args["output"], "{}_fine_tuning_history_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
-  args["network"],args["optimizer"],
-  args["lr"],
-  args["epochs"],
-  args["batch"],
-  os.getpid())]
+p = [args["output"],
+     "{}_fine_tuning_history_{}_lr:{}_epochs:{}_batch:{}_{}.png".format(
+       args["network"],
+       args["optimizer"],
+       args["lr"],
+       args["epochs"],
+       args["batch"],
+       os.getpid())]
 print("[INFO] Saving Training Loss and Accuracy History plot...")
 plt.savefig(os.path.sep.join(p))
 plt.show()
+
+print("\nAccuracy on Test Data: ", accuracy_score(testY.argmax(axis = 1), predictions.argmax(axis = 1)))
+print("\nNumber of correctly identified images: ", accuracy_score(testY.argmax(axis = 1),
+                                                                  predictions.argmax(axis = 1), normalize=False),"from:",len(testY.argmax(axis = 1)), "\n")
