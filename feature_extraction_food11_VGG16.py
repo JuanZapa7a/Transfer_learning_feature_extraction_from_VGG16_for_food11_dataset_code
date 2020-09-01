@@ -116,8 +116,8 @@ from pyimagesearch.datasets import SimpleDatasetLoader
 # print("[INFO] loading {}".format(imagePath))
 # load the dataset from disk then scale the raw pixel intensities to the
 # range [0, 1]
-spreproc = "sp_aap_iap"
-sdl = SimpleDatasetLoader(preprocessors = [sp, acp, aap, iap])
+spreproc = "sp"
+sdl = SimpleDatasetLoader(preprocessors = [sp])
 (data, labels) = sdl.load(imagePaths, verbose = 500)
 data = data.astype("float") / 255.0
 

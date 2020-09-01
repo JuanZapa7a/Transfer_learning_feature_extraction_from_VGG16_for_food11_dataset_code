@@ -11,6 +11,7 @@ class AddChannelPreprocessor:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         R = image
         image = cv2.medianBlur(R,5)
+        # subtitutes G and B channel for medianblur and Canny edge map
         G = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
                                   cv2.THRESH_BINARY, 11, 2)
         B = cv2.Canny(image, self.minVal, self.maxVal)

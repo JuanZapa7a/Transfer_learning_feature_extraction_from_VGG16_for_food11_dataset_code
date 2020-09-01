@@ -26,13 +26,13 @@ ap.add_argument("-m", "--model", default = "../model",
                 help = "path to model .hdf5")
 ap.add_argument("-n", "--network", type = str, default = "vgg16",
                 help = "name of pre-trained network to use")
-ap.add_argument("-e", "--epochs", type = int, default = 10,
+ap.add_argument("-e", "--epochs", type = int, default = 50,
                 help = "epochs to train")
-ap.add_argument("-b", "--batch", type = int, default = 40,
+ap.add_argument("-b", "--batch", type = int, default = 32,
                 help = "batch size to train")
-ap.add_argument("-op", "--optimizer", type = str, default = "adam",
+ap.add_argument("-op", "--optimizer", type = str, default = "sgd",
                 help = "Learning Rate")
-ap.add_argument("-lr", "--lr", type = float, default = 2.6e-2,
+ap.add_argument("-lr", "--lr", type = float, default = 2.4e-3,
                 help = "Learning Rate")
 ap.add_argument("-mm", "--momentum", type = float, default = 0.9,
                 help = "Momentum")
@@ -69,11 +69,22 @@ classNames = [str(x) for x in np.unique(classNames)]
 print("[INFO] Names of classes {}...".format(classNames))
 
 from pyimagesearch.preprocessing import ImageToArrayPreprocessor
+# apply the Keras utility function that correctly rearranges the dimensions
+# of the image
 from pyimagesearch.preprocessing import AspectAwarePreprocessor
+# # resize the image to a fixed size, ignoring the aspect ratio
 from pyimagesearch.preprocessing import PatchPreprocessor
+# grab the width and height of the image then use these
+# dimensions to define the corners of the image based
 from pyimagesearch.preprocessing import SimplePreprocessor
+# # resize the image to a fixed size, ignoring the aspect ratio
 from pyimagesearch.preprocessing import CropPreprocessor
+# extract a random crop from the image with the target width
+# and height
 from pyimagesearch.preprocessing import AddChannelPreprocessor
+# subtitutes G and B channel for medianblur and Canny edge map
+from pyimagesearch.preprocessing import MeanPreprocessor
+# subtract the means for each channel
 
 # initialize the image preprocessors
 aap = AspectAwarePreprocessor(224, 224)
@@ -82,6 +93,7 @@ pp = PatchPreprocessor(224, 224)
 sp = SimplePreprocessor(224, 224)
 cp = CropPreprocessor(224, 224)
 acp = AddChannelPreprocessor(10, 20)
+mp = MeanPreprocessor(1,1,1)
 
 if args["model"] in ("inception", "xception"):
   aap = AspectAwarePreprocessor(299, 299)
@@ -99,8 +111,8 @@ from pyimagesearch.datasets import SimpleDatasetLoader
 # print("[INFO] loading {}".format(imagePath))
 # load the dataset from disk then scale the raw pixel intensities to the
 # range [0, 1]
-spreproc = "sp_aap_iap"
-sdl = SimpleDatasetLoader(preprocessors = [sp, aap, iap])
+spreproc = "aap"
+sdl = SimpleDatasetLoader(preprocessors = [sp])
 (data, labels) = sdl.load(imagePaths, verbose = 500)
 data = data.astype("float") / 255.0
 
