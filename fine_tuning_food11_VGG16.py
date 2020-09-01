@@ -28,13 +28,13 @@ ap.add_argument("-n", "--network", type = str, default = "vgg16",
                 help = "name of pre-trained network to use")
 ap.add_argument("-e", "--epochs", type = int, default = 50,
                 help = "epochs to train")
-ap.add_argument("-b", "--batch", type = int, default = 32,
+ap.add_argument("-b", "--batch", type = int, default = 40,
                 help = "batch size to train")
 ap.add_argument("-op", "--optimizer", type = str, default = "sgd",
                 help = "Learning Rate")
 ap.add_argument("-lr", "--lr", type = float, default = 2.4e-3,
                 help = "Learning Rate")
-ap.add_argument("-mm", "--momentum", type = float, default = 0.9,
+ap.add_argument("-mm", "--momentum", type = float, default = 0.8,
                 help = "Momentum")
 ap.add_argument("-nv", "--nesterov", type = bool, default = True,
                 help = "Nesterov")
@@ -164,8 +164,9 @@ from sklearn.model_selection import train_test_split
                                                     test_size = 0.25,
                                                     random_state = 42)
 
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelBinarizer # [A A B B C D] = [[0 0 0
+# 1] [0 0 0 1] [0 0 1 0] [0 0 1 0][0 1 0 0] [1 0 0 0]]
+from sklearn.preprocessing import LabelEncoder # [A A B B C D] = [1 1 2 2 3 4]
 
 # # convert the labels from integers to vectors
 trainY = LabelBinarizer().fit_transform(trainYa)

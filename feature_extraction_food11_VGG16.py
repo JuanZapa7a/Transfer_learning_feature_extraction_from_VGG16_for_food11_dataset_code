@@ -217,11 +217,13 @@ if args["network"] in ("inception", "xception"):
                                           shape = (299, 299, 3)))
 
 baseModel.summary()
+
+#### Extract features from baseModel
 #%%
-trainX_features = baseModel.predict(trainX, batch_size=32)
+trainX_features = baseModel.predict(trainX, batch_size = args["batch"])
 trainX_features_flatten = trainX_features.reshape((trainX_features.shape[0],
                                                  7 * 7 * 512))
-testX_features = baseModel.predict(testX, batch_size=32)
+testX_features = baseModel.predict(testX, batch_size = args["batch"])
 testX_features_flatten = testX_features.reshape((testX_features.shape[0],
                                                  7 * 7 * 512))
 
@@ -246,6 +248,12 @@ testX_features_flatten = testX_features.reshape((testX_features.shape[0],
 # opt.fit(preprocessing.scale(trainX_features_flatten), trainYa, scoring =
 # 'accuracy')
 # print(opt.get_best_params())
+
+
+
+
+
+
 
 #%%
 # train the model
