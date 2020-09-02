@@ -257,25 +257,87 @@ testX_features_flatten = testX_features.reshape((testX_features.shape[0],
 
 #%%
 # train the model
+solver = "lbfgs"
+C = 1
 from sklearn.linear_model import LogisticRegression
 print("[INFO] training model...")
-model = LogisticRegression(solver="lbfgs", multi_class="auto")
+model = LogisticRegression(solver = solver , multi_class = "auto", max_iter =
+10000, C = C)
 model.fit(trainX_features_flatten, trainYa)
 
+print("[INFO] saving model to file...")
+import pickle
 
-#%%
+# save the model to disk
+p = [args["output"],'logistic_regression_model.pickle']
+f = open(os.path.sep.join(p), 'wb')
+pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
+f.close()
+
+# some time later...
+
+print("[INFO] loading model from file...")
+# load the model from disk
+p = [args["output"],'logistic_regression_model.pickle']
+model = pickle.load(open(os.path.sep.join(p), 'rb'))
+
+## %%
+##### EVALUATING #####
+
+print("[INFO] evaluating after initialization (making predictions)...")
 from sklearn.metrics import classification_report, confusion_matrix, \
   accuracy_score
+
+# 1. Evaluate the network after initialization
+# make predictions on the testing set
+
 model.score(testX_features_flatten, testYa)
 predictions = model.predict(testX_features_flatten)
-print("\nAccuracy on Test Data: ", accuracy_score(testYa, predictions))
-print("\nNumber of correctly identified images: ", accuracy_score(testYa,
-                                                                  predictions, normalize=False),"from:",len(testYa), "\n")
-print(classification_report(testYa,predictions,
-                                                       target_names = classNames)
-      )
-confusion_matrix(testYa, predictions, labels=range(0,11))
 
+print("[INFO] Saving Predictions to file...")
+import pickle
+
+p = [args["output"], "predictions_logistic_regression_model.pickle"]
+# save the predicitons
+f = open(os.path.sep.join(p), 'wb')
+pickle.dump(predictions, f, pickle.HIGHEST_PROTOCOL)
+f.close()
+
+# 2. Classification report
+# for each image in the testing set we need to find the index of the
+# label with corresponding largest predicted probability
+
+#
+# Loading training history file
+print("[INFO] Loading Predictions from file...")
+import pickle
+
+p = [args["output"],"predictions_logistic_regression_model.pickle"]
+f = open(os.path.sep.join(p), 'rb')
+predictions = pickle.load(f)
+f.close()
+
+report = classification_report(testYa,predictions, target_names = classNames)
+# display Classification Report
+print(report, "\n")
+print("")
+
+# 3. Confusion Matrix
+confmatrix = confusion_matrix(testYa, predictions, labels=range(0, 11))
+# display Confusion Matrix
+print(confmatrix)
+
+# 4. Saving the classification report and confussion matrix to file
+p = [args["output"], "clasification_report_logistic_regression_model.txt"]
+
+f = open(os.path.sep.join(p), "w")
+print("[INFO] Saving Classification Report and Confusion Matrix to file...")
+f.write(report)
+f.write("")
+f.write(str(confmatrix))
+f.close()
+
+# 5. Compute the rank-1, rank 3 and rank-5 accuracies
 print("[INFO] predicting...")
 from pyimagesearch.utils.ranked import rank5_accuracy, rankn_accuracy
 
@@ -286,3 +348,17 @@ from pyimagesearch.utils.ranked import rank5_accuracy, rankn_accuracy
 print("rank-1: {:.2f}%".format(rank1 * 100))
 print("rank-3: {:.2f}%".format(rankn * 100))
 print("rank-5: {:.2f}%".format(rank5 * 100))
+
+# 6. Saving the ranking to file
+p = [args["output"], "ranking_report_logistic_regression_model.txt"]
+print("[INFO] Saving Ranking information to file...")
+f = open(os.path.sep.join(p), "w")
+f.write("rank-1: {:.2f}%".format(rank1 * 100))
+f.write("rank-3: {:.2f}%".format(rankn * 100))
+f.write("rank-5: {:.2f}%".format(rank5 * 100))
+f.close()
+
+print("\nAccuracy on Test Data: ", accuracy_score(testYa, predictions))
+print("\nNumber of correctly identified images: ",
+      accuracy_score(testYa, predictions, normalize=False),"from:",
+      len(testYa), "\n")

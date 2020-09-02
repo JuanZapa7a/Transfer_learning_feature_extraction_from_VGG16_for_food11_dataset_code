@@ -30,9 +30,9 @@ ap.add_argument("-e", "--epochs", type = int, default = 50,
                 help = "epochs to train")
 ap.add_argument("-b", "--batch", type = int, default = 40,
                 help = "batch size to train")
-ap.add_argument("-op", "--optimizer", type = str, default = "sgd",
+ap.add_argument("-op", "--optimizer", type = str, default = "adam",
                 help = "Learning Rate")
-ap.add_argument("-lr", "--lr", type = float, default = 2.4e-3,
+ap.add_argument("-lr", "--lr", type = float, default = 3.4e-3,
                 help = "Learning Rate")
 ap.add_argument("-mm", "--momentum", type = float, default = 0.8,
                 help = "Momentum")
@@ -363,6 +363,8 @@ f = open(os.path.sep.join(p), 'wb')
 pickle.dump(H.history, f, pickle.HIGHEST_PROTOCOL)
 f.close()
 
+
+# some time later...
 # %%
 print("[INFO] loading the best model...")
 from tensorflow.keras.models import load_model
@@ -376,6 +378,8 @@ p = [args["model"], "{}_{}_lr:{}_epochs:{}_batch:{}_{}.hdf5".format(
   args["batch"],
   os.getpid())]
 model = load_model(os.path.sep.join(p))
+
+
 
 # %%
 ##### EVALUATING #####
