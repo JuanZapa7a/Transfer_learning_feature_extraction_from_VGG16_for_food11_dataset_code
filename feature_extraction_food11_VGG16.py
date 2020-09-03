@@ -250,14 +250,9 @@ testX_features_flatten = testX_features.reshape((testX_features.shape[0],
 # print(opt.get_best_params())
 
 
-
-
-
-
-
 #%%
 # train the model
-solver = "lbfgs"
+solver = "newton-cg"
 C = 1
 from sklearn.linear_model import LogisticRegression
 print("[INFO] training model...")

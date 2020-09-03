@@ -24,7 +24,7 @@ ap.add_argument("-o", "--output", default = "../output",
                 help = "path to output .png loss/acc plot")
 ap.add_argument("-m", "--model", default = "../model",
                 help = "path to model .hdf5")
-ap.add_argument("-n", "--network", type = str, default = "vgg16",
+ap.add_argument("-n", "--network", type = str, default = "vgg19",
                 help = "name of pre-trained network to use")
 ap.add_argument("-e", "--epochs", type = int, default = 50,
                 help = "epochs to train")
